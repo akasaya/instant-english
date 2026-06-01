@@ -1,0 +1,35 @@
+name: Generate Question Candidates
+
+on:
+  schedule:
+    - cron: "0 22 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate candidates from web sources
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+        run: node scripts/generate-web-candidates.mjs
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/web-question-candidates
+          commit-message: Add web-based question candidates
+          title: Add web-based question candidates
+          body: |
+            This PR adds reviewed-source candidate prompts to `data/candidates.json`.
+
+            These are not shown in the app until they are manually reviewed and moved into `data/questions.json`.
+          add-paths: data/candidates.json

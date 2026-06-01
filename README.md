@@ -70,8 +70,16 @@ http://localhost:8788
 ├── index.html      # App markup
 ├── styles.css      # Visual design and responsive layout
 ├── app.js          # Question data and practice logic
+├── data/           # Question data and generated candidates
+├── scripts/        # Question data maintenance scripts
 └── README.md
 ```
+
+## Question Data
+
+Production questions live in `data/questions.json`. The browser loads `data/questions.js`, which is generated from that JSON so the app still works when opened directly as a static file.
+
+Web-based additions are collected as review candidates in `data/candidates.json`. They are not shown in the app until they are manually reviewed and moved into `data/questions.json`.
 
 ## Browser Compatibility
 

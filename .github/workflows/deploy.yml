@@ -21,6 +21,8 @@ jobs:
         run: |
           mkdir -p dist
           cp index.html styles.css app.js dist/
+          mkdir -p dist/data
+          cp data/questions.js dist/data/
 
       - name: Ensure Pages project exists
         uses: cloudflare/wrangler-action@v3
