@@ -47,9 +47,11 @@ For microphone permission to be remembered, open the app from a secure origin:
 
 Opening the app as a local `file://` URL may cause the browser to ask for microphone permission repeatedly, or speech recognition may be unavailable. If the microphone was blocked, open the browser site settings from the address bar and allow microphone access for the site.
 
-## Local Development
+## Local Use
 
-Because this is a static app, you can open `index.html` directly. For microphone testing, use a local server instead:
+Because this is a static app, you can open `index.html` directly.
+
+For microphone testing, open it from `localhost` or an HTTPS URL instead of `file://`:
 
 ```bash
 python -m http.server 8788
@@ -61,43 +63,6 @@ Then open:
 http://localhost:8788
 ```
 
-If you have Node.js and npm installed, you can also use Wrangler:
-
-```bash
-npm install
-npm run dev
-```
-
-## Deploy To Cloudflare Pages
-
-### Option 1: GitHub Integration
-
-1. Push this repository to GitHub.
-2. Open the Cloudflare dashboard.
-3. Go to `Workers & Pages`.
-4. Choose `Create application` → `Pages`.
-5. Connect the GitHub repository.
-6. Use these build settings:
-
-| Setting | Value |
-| --- | --- |
-| Framework preset | `None` |
-| Build command | empty |
-| Build output directory | `/` |
-
-7. Deploy.
-
-Cloudflare Pages serves the app over HTTPS, which is the recommended setup for microphone permission.
-
-### Option 2: Wrangler CLI
-
-```bash
-npm install
-npm run deploy
-```
-
-The deploy script publishes the current directory as a Cloudflare Pages project named `instant-eisaku`.
-
 ## Project Structure
 
 ```text
@@ -105,8 +70,6 @@ The deploy script publishes the current directory as a Cloudflare Pages project 
 ├── index.html      # App markup
 ├── styles.css      # Visual design and responsive layout
 ├── app.js          # Question data and practice logic
-├── _headers        # Cloudflare Pages headers
-├── package.json    # Optional Wrangler scripts
 └── README.md
 ```
 
