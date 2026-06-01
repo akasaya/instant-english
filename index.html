@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>瞬間英作文トレーナー</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="practice-panel" aria-labelledby="app-title">
+      <div class="topbar">
+        <div>
+          <p class="eyebrow">Instant Composition</p>
+          <h1 id="app-title">瞬間英作文トレーナー</h1>
+        </div>
+        <div class="streak" aria-label="今日の連続正解">
+          <span id="streakCount">0</span>
+          <small>streak</small>
+        </div>
+      </div>
+
+      <div class="notice" id="micHelp">
+        <strong id="totalCount">0問</strong>
+        <span>マイク許可を毎回出さないために、Cloudflare PagesなどのHTTPS公開URLで使うのがおすすめです。</span>
+      </div>
+
+      <div class="controls" aria-label="練習設定">
+        <label>
+          セット
+          <select id="deckSelect"></select>
+        </label>
+        <label>
+          レベル
+          <select id="levelSelect">
+            <option value="all">すべて</option>
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+          </select>
+        </label>
+        <label>
+          出題順
+          <select id="orderSelect">
+            <option value="shuffle">シャッフル</option>
+            <option value="ordered">順番</option>
+            <option value="weak">苦手優先</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="mode-tabs" role="tablist" aria-label="回答モード">
+        <button class="tab-button active" id="typingMode" type="button" aria-pressed="true">ライティング</button>
+        <button class="tab-button" id="speakingMode" type="button" aria-pressed="false">スピーキング</button>
+      </div>
+
+      <article class="question-card">
+        <div class="question-meta">
+          <span id="questionCounter">1 / 1</span>
+          <span id="questionLevel">Level 1</span>
+        </div>
+        <p class="jp-label">和文</p>
+        <p class="japanese" id="japaneseText">読み込み中...</p>
+        <div class="timer-line">
+          <div id="timerBar"></div>
+        </div>
+      </article>
+
+      <section class="answer-area" aria-label="回答欄">
+        <label class="answer-label" for="answerInput">あなたの英訳</label>
+        <textarea id="answerInput" rows="4" autocomplete="off" spellcheck="false" placeholder="日本語を見た瞬間に英語で書く、または話してください。"></textarea>
+        <div class="speech-row">
+          <button id="speakButton" class="secondary" type="button">録音開始</button>
+          <span id="speechStatus">スピーキングモードで音声入力を使えます。</span>
+        </div>
+      </section>
+
+      <div class="action-row">
+        <button id="showAnswerButton" type="button">答えを見る</button>
+        <button id="correctButton" class="success" type="button">できた</button>
+        <button id="missButton" class="danger" type="button">もう一回</button>
+        <button id="nextButton" type="button">次へ</button>
+      </div>
+
+      <section class="feedback" id="feedbackPanel" aria-live="polite">
+        <div>
+          <p class="feedback-label">模範解答</p>
+          <p id="modelAnswer">答えを見ると表示されます。</p>
+        </div>
+        <div>
+          <p class="feedback-label">別解・ヒント</p>
+          <p id="hintText">まずは語順と時制だけをそろえましょう。</p>
+        </div>
+      </section>
+    </section>
+
+    <aside class="side-panel" aria-label="学習状況">
+      <section class="stats-grid">
+        <div>
+          <strong id="doneCount">0</strong>
+          <span>回答</span>
+        </div>
+        <div>
+          <strong id="accuracyRate">0%</strong>
+          <span>できた率</span>
+        </div>
+        <div>
+          <strong id="weakCount">0</strong>
+          <span>復習候補</span>
+        </div>
+      </section>
+
+      <section class="coach-box">
+        <h2>今日の回し方</h2>
+        <ol>
+          <li>和文を見たら3秒以内に英語を出す。</li>
+          <li>迷ったら短い文で言い切る。</li>
+          <li>模範解答を声に出して一回まねる。</li>
+        </ol>
+      </section>
+
+      <section class="history-box">
+        <div class="history-head">
+          <h2>直近の記録</h2>
+          <button id="resetButton" class="ghost" type="button">リセット</button>
+        </div>
+        <ul id="historyList"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

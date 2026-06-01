@@ -1,0 +1,14 @@
+{
+  "name": "instant-eisaku",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A static Japanese-to-English instant composition trainer.",
+  "scripts": {
+    "dev": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy . --project-name instant-eisaku",
+    "check": "node --check app.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
