@@ -199,9 +199,14 @@ const state = {
   mode: "typing",
   queue: [],
   index: 0,
+  sessionActive: false,
+  paused: false,
   answerVisible: false,
   answered: false,
   timerId: null,
+  timerLimitMs: 12000,
+  remainingMs: 12000,
+  elapsedMs: 0,
   startedAt: Date.now(),
   recognition: null,
   listening: false,
@@ -220,6 +225,10 @@ const el = {
   answerInput: document.querySelector("#answerInput"),
   speakButton: document.querySelector("#speakButton"),
   speechStatus: document.querySelector("#speechStatus"),
+  startButton: document.querySelector("#startButton"),
+  pauseButton: document.querySelector("#pauseButton"),
+  restartButton: document.querySelector("#restartButton"),
+  sessionStatus: document.querySelector("#sessionStatus"),
   showAnswerButton: document.querySelector("#showAnswerButton"),
   correctButton: document.querySelector("#correctButton"),
   missButton: document.querySelector("#missButton"),
@@ -292,13 +301,35 @@ function rebuildQueue() {
     state.queue = shuffle(items);
   }
   state.index = 0;
-  renderQuestion();
+  if (state.sessionActive) {
+    renderQuestion();
+  } else {
+    renderReadyState();
+  }
+}
+
+function renderReadyState() {
+  clearInterval(state.timerId);
+  if (state.listening && state.recognition) state.recognition.stop();
+  state.paused = false;
+  state.remainingMs = state.timerLimitMs;
+  el.japaneseText.textContent = "開始を押すと出題されます。";
+  el.questionCounter.textContent = `0 / ${state.queue.length || filteredItems().length}`;
+  el.questionLevel.textContent = "Ready";
+  el.answerInput.value = "";
+  el.modelAnswer.textContent = "練習を開始すると表示できます。";
+  el.hintText.textContent = "開始後、和文を見た瞬間に英語を出してください。";
+  el.timerBar.style.transform = "scaleX(1)";
+  updateSessionControls();
+  updateStats();
 }
 
 function renderQuestion() {
   const item = currentItem();
   state.answerVisible = false;
   state.answered = false;
+  state.remainingMs = state.timerLimitMs;
+  state.elapsedMs = 0;
   state.startedAt = Date.now();
   el.japaneseText.textContent = item.ja;
   el.questionCounter.textContent = `${state.index + 1} / ${state.queue.length}`;
@@ -310,22 +341,93 @@ function renderQuestion() {
   el.missButton.disabled = false;
   el.answerInput.focus();
   updateStats();
+  updateSessionControls();
   startTimer();
 }
 
 function startTimer() {
   clearInterval(state.timerId);
-  const limitMs = 12000;
-  el.timerBar.style.transform = "scaleX(1)";
+  if (!state.sessionActive || state.paused) return;
+  state.startedAt = Date.now();
+  el.timerBar.style.transform = `scaleX(${state.remainingMs / state.timerLimitMs})`;
   state.timerId = setInterval(() => {
-    const elapsed = Date.now() - state.startedAt;
-    const left = Math.max(0, 1 - elapsed / limitMs);
+    const delta = Date.now() - state.startedAt;
+    state.elapsedMs += delta;
+    state.remainingMs = Math.max(0, state.remainingMs - delta);
+    state.startedAt = Date.now();
+    const left = Math.max(0, state.remainingMs / state.timerLimitMs);
     el.timerBar.style.transform = `scaleX(${left})`;
     if (left === 0) clearInterval(state.timerId);
   }, 80);
 }
 
+function captureTimerDelta() {
+  if (!state.sessionActive || state.paused) return;
+  const delta = Date.now() - state.startedAt;
+  state.elapsedMs += delta;
+  state.remainingMs = Math.max(0, state.remainingMs - delta);
+  state.startedAt = Date.now();
+}
+
+function startSession() {
+  if (state.sessionActive && state.paused) {
+    state.paused = false;
+    el.answerInput.focus();
+    updateSessionControls();
+    startTimer();
+    return;
+  }
+  state.sessionActive = true;
+  state.paused = false;
+  state.index = 0;
+  renderQuestion();
+}
+
+function pauseSession() {
+  if (!state.sessionActive) return;
+  if (state.paused) {
+    startSession();
+    return;
+  }
+  captureTimerDelta();
+  state.paused = true;
+  clearInterval(state.timerId);
+  if (state.listening && state.recognition) state.recognition.stop();
+  updateSessionControls();
+}
+
+function restartSession() {
+  state.sessionActive = false;
+  state.paused = false;
+  rebuildQueue();
+}
+
+function canAnswer() {
+  return state.sessionActive && !state.paused;
+}
+
+function updateSessionControls() {
+  const disabled = !canAnswer();
+  el.startButton.disabled = state.sessionActive && !state.paused;
+  el.startButton.textContent = state.sessionActive && state.paused ? "再開" : "開始";
+  el.pauseButton.disabled = !state.sessionActive;
+  el.pauseButton.textContent = state.paused ? "再開" : "一時停止";
+  el.restartButton.disabled = !state.sessionActive && state.index === 0;
+  el.answerInput.disabled = disabled;
+  el.showAnswerButton.disabled = disabled;
+  el.correctButton.disabled = disabled || state.answered;
+  el.missButton.disabled = disabled || state.answered;
+  el.nextButton.disabled = disabled;
+  el.speakButton.disabled = disabled || state.mode !== "speaking" || !supportsSpeechRecognition();
+  el.sessionStatus.textContent = state.sessionActive
+    ? state.paused
+      ? "一時停止中です。再開すると同じ問題から続きます。"
+      : "練習中です。"
+    : "開始を押すと出題されます。";
+}
+
 function revealAnswer() {
+  if (!canAnswer()) return;
   const item = currentItem();
   state.answerVisible = true;
   el.modelAnswer.textContent = item.en;
@@ -333,9 +435,10 @@ function revealAnswer() {
 }
 
 function markResult(wasCorrect) {
-  if (state.answered) return;
+  if (!canAnswer() || state.answered) return;
   const item = currentItem();
-  const seconds = Math.max(1, Math.round((Date.now() - state.startedAt) / 1000));
+  captureTimerDelta();
+  const seconds = Math.max(1, Math.round(state.elapsedMs / 1000));
   state.answered = true;
   el.correctButton.disabled = true;
   el.missButton.disabled = true;
@@ -357,6 +460,7 @@ function markResult(wasCorrect) {
 }
 
 function nextQuestion() {
+  if (!canAnswer()) return;
   state.index += 1;
   if (state.index >= state.queue.length) {
     rebuildQueue();
@@ -400,7 +504,7 @@ function setMode(mode) {
   el.speakingMode.classList.toggle("active", speaking);
   el.typingMode.setAttribute("aria-pressed", String(!speaking));
   el.speakingMode.setAttribute("aria-pressed", String(speaking));
-  el.speakButton.disabled = !speaking || !supportsSpeechRecognition();
+  updateSessionControls();
   refreshMicStatus();
 }
 
@@ -466,7 +570,7 @@ function setupSpeechRecognition() {
 }
 
 function toggleListening() {
-  if (!state.recognition) return;
+  if (!state.recognition || !canAnswer()) return;
   if (state.listening) {
     state.recognition.stop();
     return;
@@ -502,19 +606,25 @@ function autoJudge() {
 function bindEvents() {
   el.deckSelect.addEventListener("change", event => {
     state.deckId = event.target.value;
+    state.sessionActive = false;
     rebuildQueue();
   });
   el.levelSelect.addEventListener("change", event => {
     state.level = event.target.value;
+    state.sessionActive = false;
     rebuildQueue();
   });
   el.orderSelect.addEventListener("change", event => {
     state.order = event.target.value;
+    state.sessionActive = false;
     rebuildQueue();
   });
   el.typingMode.addEventListener("click", () => setMode("typing"));
   el.speakingMode.addEventListener("click", () => setMode("speaking"));
   el.speakButton.addEventListener("click", toggleListening);
+  el.startButton.addEventListener("click", startSession);
+  el.pauseButton.addEventListener("click", pauseSession);
+  el.restartButton.addEventListener("click", restartSession);
   el.showAnswerButton.addEventListener("click", revealAnswer);
   el.correctButton.addEventListener("click", () => markResult(true));
   el.missButton.addEventListener("click", () => markResult(false));
@@ -527,6 +637,7 @@ function bindEvents() {
   el.answerInput.addEventListener("keydown", event => {
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
+      if (!canAnswer()) return;
       revealAnswer();
       markResult(autoJudge());
     }
