@@ -7,7 +7,7 @@ const questionsJsPath = new URL("data/questions.js", root);
 const decks = JSON.parse(await fs.readFile(questionsPath, "utf8"));
 await fs.writeFile(
   questionsJsPath,
-  `window.QUESTION_DECKS = ${JSON.stringify(decks, null, 2)};\\n`,
+  `window.QUESTION_DECKS = ${JSON.stringify(decks, null, 2)};\n`,
   "utf8"
 );
 

@@ -1043,4 +1043,4 @@ window.QUESTION_DECKS = [
       }
     ]
   }
-];\n
+];

@@ -1,57 +1,36 @@
 # Instant English
 
-Instant English is a small browser app for Japanese-to-English "shunkan eisakubun" practice.
+Instant English is a small static web app for Japanese-to-English instant composition practice.
 
-日本語の文を見て、すぐに英語で書く・話す練習をするための静的Webアプリです。ライティング練習とスピーキング練習の両方に対応しています。
+It is designed for quick repetition: read a Japanese prompt, produce the English sentence immediately, reveal the model answer, and mark whether you got it.
 
 ## Features
 
-- 144 Japanese-to-English prompts across 6 decks
-- Writing mode for typed translation practice
-- Speaking mode using browser speech recognition
+- 144 prompts across 6 decks
+- Writing practice
+- Speaking practice with browser speech recognition
 - Model answer reveal with English text-to-speech playback
-- Level filters: Level 1, Level 2, Level 3, or all
-- Question order: shuffle, ordered, or weak-first review
+- Level filters
+- Shuffle, ordered, and weak-first review modes
 - Local progress tracking with streak, accuracy, weak items, and recent history
-- Static app: no backend, database, account, or API key required
+- No backend, database, account, or runtime API key
 
-## Practice Decks
+## Question Decks
 
 | Deck | Focus | Questions |
 | --- | --- | ---: |
-| 基礎瞬発 | core grammar and fast sentence production | 24 |
-| 日常会話 | everyday conversation | 24 |
-| 仕事・学習 | work and study situations | 24 |
-| 旅行・外出 | travel and going out | 24 |
-| 意見・説明 | opinions and explanations | 24 |
-| 感情・人間関係 | feelings and relationships | 24 |
-
-## How To Use
-
-1. Read the Japanese sentence.
-2. Translate it into English immediately, either by typing or speaking.
-3. Press `答えを見る` to reveal the model answer.
-4. Mark the result with `できた` or `もう一回`.
-5. Use `苦手優先` to review prompts you missed.
-
-The app stores progress in `localStorage`, so your history stays in the same browser on the same site.
-
-## Microphone Notes
-
-Speaking mode depends on browser support for the Web Speech API. It works best in Chrome or Chromium-based browsers.
-
-For microphone permission to be remembered, open the app from a secure origin:
-
-- `https://...` such as Cloudflare Pages
-- `http://localhost...` during local development
-
-Opening the app as a local `file://` URL may cause the browser to ask for microphone permission repeatedly, or speech recognition may be unavailable. If the microphone was blocked, open the browser site settings from the address bar and allow microphone access for the site.
+| Core | fast grammar recall | 24 |
+| Daily | everyday conversation | 24 |
+| Work | work and study situations | 24 |
+| Travel | travel and going out | 24 |
+| Opinion | opinions and explanations | 24 |
+| Feelings | feelings and relationships | 24 |
 
 ## Local Use
 
-Because this is a static app, you can open `index.html` directly.
+Open `index.html` in a browser.
 
-For microphone testing, open it from `localhost` or an HTTPS URL instead of `file://`:
+For microphone testing, use `localhost` instead of opening the file directly:
 
 ```bash
 python -m http.server 8788
@@ -63,34 +42,39 @@ Then open:
 http://localhost:8788
 ```
 
+## Question Data
+
+Production questions live in `data/questions.json`.
+
+The browser loads `data/questions.js`, which is generated from the JSON file so the app can still work as a simple static file.
+
+When adding questions through Codex, update `data/questions.json`, then run:
+
+```bash
+node scripts/sync-question-data.mjs
+```
+
+That regenerates `data/questions.js`.
+
 ## Project Structure
 
 ```text
 .
-├── index.html      # App markup
-├── styles.css      # Visual design and responsive layout
-├── app.js          # Question data and practice logic
-├── data/           # Question data and generated candidates
-├── scripts/        # Question data maintenance scripts
+├── index.html
+├── styles.css
+├── app.js
+├── data/
+│   ├── questions.json
+│   └── questions.js
+├── scripts/
+│   └── sync-question-data.mjs
 └── README.md
 ```
 
-## Question Data
+## Deployment
 
-Production questions live in `data/questions.json`. The browser loads `data/questions.js`, which is generated from that JSON so the app still works when opened directly as a static file.
-
-Web-based additions are collected as review candidates in `data/candidates.json`. They are not shown in the app until they are manually reviewed and moved into `data/questions.json`.
-
-## Browser Compatibility
-
-| Feature | Requirement |
-| --- | --- |
-| Writing practice | Any modern browser |
-| Progress saving | `localStorage` |
-| Answer playback | `speechSynthesis` |
-| Speech input | `SpeechRecognition` / `webkitSpeechRecognition` |
-| Persistent mic permission | HTTPS or localhost |
+Deployment is handled by the GitHub Actions workflow in `.github/workflows/deploy.yml`.
 
 ## License
 
-Private / personal project for now. Add a license before distributing broadly.
+Private / personal project for now.
