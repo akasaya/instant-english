@@ -241,9 +241,7 @@ const el = {
   weakCount: document.querySelector("#weakCount"),
   historyList: document.querySelector("#historyList"),
   resetButton: document.querySelector("#resetButton"),
-  timerBar: document.querySelector("#timerBar"),
-  micHelp: document.querySelector("#micHelp"),
-  totalCount: document.querySelector("#totalCount")
+  timerBar: document.querySelector("#timerBar")
 };
 
 function loadStats() {
@@ -472,12 +470,10 @@ function nextQuestion() {
 function updateStats() {
   const accuracy = state.stats.done ? Math.round((state.stats.correct / state.stats.done) * 100) : 0;
   const weakTotal = Object.values(state.stats.weak).filter(score => score > 0).length;
-  const total = decks.reduce((sum, deck) => sum + deck.items.length, 0);
   el.streakCount.textContent = state.stats.streak;
   el.doneCount.textContent = state.stats.done;
   el.accuracyRate.textContent = `${accuracy}%`;
   el.weakCount.textContent = weakTotal;
-  if (el.totalCount) el.totalCount.textContent = `${total}問`;
   renderHistory();
 }
 
@@ -523,7 +519,7 @@ async function refreshMicStatus() {
   }
   const secure = window.isSecureContext || location.hostname === "localhost";
   if (!secure) {
-    el.speechStatus.textContent = "マイク許可を保持するには、HTTPSの公開URLかlocalhostで開いてください。";
+    el.speechStatus.textContent = "この環境では音声入力が制限される場合があります。";
     return;
   }
   try {
